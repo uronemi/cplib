@@ -17,3 +17,4 @@
 #define VEC5(type, name, N, l, r) std::vector<type> name(N); for (std::size_t i = (l); i < (r); ++i) input(name[i]);
 #define GET_VEC_MACRO(_1, _2, _3, _4, _5, NAME, ...) NAME
 #define VEC(...) GET_VEC_MACRO(__VA_ARGS__, VEC5, VEC4, VEC3)(__VA_ARGS__)
+#define ALL(container) std::begin(container), std::end(container)
