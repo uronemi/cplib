@@ -4,9 +4,9 @@
 #include "Modint.hpp"
 
 template <typename T>
-using maxpq = std::priority_queue<T>;
+using Maxpq = std::priority_queue<T>;
 template <typename T>
-using minpq = std::priority_queue<T, std::vector<T>, std::greater<T>>;
+using Minpq = std::priority_queue<T, std::vector<T>, std::greater<T>>;
 
 void yn(bool f) { println(f ? "yes" : "no"); }
 
