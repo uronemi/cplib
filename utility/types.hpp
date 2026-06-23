@@ -13,3 +13,7 @@ using f128 = long double;
 using String = std::string;
 template <typename T>
 using Vec = std::vector<T>;
+template <typename T>
+using Maxpq = std::priority_queue<T>;
+template <typename T>
+using Minpq = std::priority_queue<T, std::vector<T>, std::greater<T>>;
