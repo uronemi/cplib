@@ -72,3 +72,11 @@ void print_raw(const std::vector<T>& v, bool endline = true) {
   for (const auto& e : v) print_ns(e);
   if (endline) println();
 }
+
+template <typename T = char>
+void print_raw2d(const std::vector<std::vector<T>>& v) {
+  for (const std::vector<T>& v_r : v) {
+    for (const T& e : v_r) print_ns(e);
+    println();
+  }
+}
