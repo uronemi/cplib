@@ -21,12 +21,10 @@ class RollingHash {
     return t >= MOD ? t - MOD : t;
   }
 
-  unsigned int shift(unsigned int x) const {
-    return x ^= x << 13, x ^= x >> 17, x ^= x << 5;
-  }
+  unsigned int shift(unsigned int x) const { return x ^= x << 13, x ^= x >> 17, x ^= x << 5; }
 
   public:
-  RollingHash() : S() {}
+  RollingHash() {}
 
   // 文字列 s から Rolling Hash を構築する
   // O(s) time
