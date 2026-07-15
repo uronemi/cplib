@@ -17,86 +17,118 @@ class LiChaoTree {
   private:
   struct Node {
     function_type f;
-    Node *l, *r;
+    unsigned int l, r;
 
-    Node (const function_type& F) : f(F), l(nullptr), r(nullptr) {}
+    Node (const function_type& F) : f(F), l(0), r(0) {}
   };
-  
-  Node *root = nullptr;
 
-  Node* add_line_internal(
-    Node *t,
-    function_type& f,
-    const value_type& l,
-    const value_type& r,
-    const value_type& y_l,
-    const value_type& y_r
-  ) {
-    if (!t) return new Node(f);
-    value_type ty_l = L::eval(t->f, l), ty_r = L::eval(t->f, r);
-    if (ty_l <= y_l && ty_r <= y_r) return t;
-    else if (ty_l >= y_l && ty_r >= y_r) {
-      t->f = f;
-      return t;
-    }
+  std::vector<Node> pool;
+  unsigned int root = 0;
 
-    value_type m = std::midpoint(l, r);
-    value_type ty_m = L::eval(t->f, m), y_m = L::eval(f, m);
-    if (ty_m > y_m) {
-      std::swap(t->f, f);
-      if (y_l >= ty_l) t->l = add_line_internal(t->l, f, l, m, ty_l, ty_m);
-      else t->r = add_line_internal(t->r, f, m + 1, r, L::eval(f, m + 1), ty_r);
-    }
-    else {
-      if (ty_l >= y_l) t->l = add_line_internal(t->l, f, l, m, y_l, y_m);
-      else t->r = add_line_internal(t->r, f, m + 1, r, L::eval(f, m + 1), y_r);
-    }
-
-    return t;
+  unsigned int new_node(const function_type& f) {
+    pool.emplace_back(f);
+    return pool.size() - 1;
   }
 
-  Node* add_segment_internal(
-    Node *t,
+  unsigned int add_line_internal(
+    unsigned int t,
     function_type f,
+    value_type l,
+    value_type r,
+    value_type y_l,
+    value_type y_r
+  ) {
+    unsigned int sub = t, par = 0;
+    bool from_l = false;
+
+    while (true) {
+      if (!t) {
+        unsigned int nt = new_node(f);
+        if (!par) sub = nt;
+        else if (from_l) pool[par].l = nt;
+        else pool[par].r = nt;
+        return sub;
+      }
+
+      value_type ty_l = L::eval(pool[t].f, l), ty_r = L::eval(pool[t].f, r);
+      if (ty_l <= y_l && ty_r <= y_r) return sub;
+      if (ty_l >= y_l && ty_r >= y_r) {
+        pool[t].f = f;
+        return sub;
+      }
+
+      value_type m = std::midpoint(l, r), ty_m = L::eval(pool[t].f, m), y_m = L::eval(f, m);
+      par = t;
+      if (ty_m > y_m) {
+        std::swap(pool[t].f, f);
+        if (y_l >= ty_l) {
+          from_l = true;
+          t = pool[par].l;
+          r = m;
+          y_r = ty_m;
+          y_l = ty_l;
+        }
+        else {
+          from_l = false;
+          value_type ny_l = L::eval(f, m + 1);
+          t = pool[par].r;
+          l = m + 1;
+          y_l = ny_l;
+          y_r = ty_r;
+        }
+      }
+      else {
+        if (ty_l >= y_l) {
+          from_l = true;
+          t = pool[par].l;
+          r = m;
+          y_r = y_m;
+        }
+        else {
+          from_l = false;
+          value_type ny_l = L::eval(f, m + 1);
+          t = pool[par].r;
+          l = m + 1;
+          y_l = ny_l;
+        }
+      }
+    }
+  }
+
+  unsigned int add_segment_internal(
+    unsigned int t,
+    const function_type& f,
     const value_type& a,
     const value_type& b,
-    const value_type& l,
-    const value_type& r,
-    const value_type& y_l,
-    const value_type& y_r
+    value_type l,
+    value_type r,
+    value_type y_l,
+    value_type y_r
   ) {
     if (r < a || b < l) return t;
     if (a <= l && r <= b) return add_line_internal(t, f, l, r, y_l, y_r);
+
     if (t) {
-      value_type ty_l = L::eval(t->f, l), ty_r = L::eval(t->f, r);
+      value_type ty_l = L::eval(pool[t].f, l), ty_r = L::eval(pool[t].f, r);
       if (ty_l <= y_l && ty_r <= y_r) return t;
     }
-    else t = new Node(L::e());
+    else t = new_node(L::e());
 
-    value_type m = std::midpoint(l, r);
-    value_type y_m = L::eval(f, m);
-    t->l = add_segment_internal(t->l, f, a, b, l, m, y_l, y_m);
-    t->r = add_segment_internal(t->r, f, a, b, m + 1, r, L::eval(f, m + 1), y_r);
+    value_type m = std::midpoint(l, r), y_m = L::eval(f, m);
+    pool[t].l = add_segment_internal(pool[t].l, f, a, b, l, m, y_l, y_m);
+    pool[t].r = add_segment_internal(pool[t].r, f, a, b, m + 1, r, L::eval(f, m + 1), y_r);
     return t;
   }
 
-  value_type query_internal(const Node* t, const value_type& l, const value_type& r, const value_type& p) {
-    if (!t) return L::eval(L::e(), p);
-    if (l == r) return L::eval(t->f, p);
-
-    value_type m = std::midpoint(l, r);
-    if (p <= m) return std::min(L::eval(t->f, p), query_internal(t->l, l, m, p));
-    else return std::min(L::eval(t->f, p), query_internal(t->r, m + 1, r, p));
-  }
-
   public:
-  LiChaoTree() = default;
+  LiChaoTree() { pool.emplace_back(L::e()); }
+
+  void reserve(std::size_t N) { pool.reserve(N + 1); }
 
   // [x_min, x_max) 上で定義された曲線 y=f(x) を追加する
   // O(log(x_max-x_min)) time
   void add_line(const function_type& f) {
-    function_type f_ = f;
-    root = add_line_internal(root, f_, x_min, x_max - 1, L::eval(f, x_min), L::eval(f, x_max - 1));
+    root = add_line_internal(root, f, x_min, x_max - 1, L::eval(f, x_min), L::eval(f, x_max - 1));
   }
 
   // [a, b) で定義された曲線 y=f(x) を追加する
@@ -113,6 +145,20 @@ class LiChaoTree {
   // O(log(x_max-x_min)) time
   value_type query(const value_type& p) {
     assert(x_min <= p && p < x_max);
-    return query_internal(root, x_min, x_max - 1, p);
+    value_type l = x_min, r = x_max - 1;
+    unsigned int t = root;
+    if (!t) return L::eval(L::e(), p);
+
+    value_type res = L::eval(pool[t].f, p);
+    while (l < r) {
+      value_type m = std::midpoint(l, r);
+      unsigned int nt;
+      if (p <= m) nt = pool[t].l, r = m;
+      else nt = pool[t].r, l = m + 1;
+      if (!nt) break;
+      t = nt;
+      res = std::min(res, L::eval(pool[t].f, p));
+    }
+    return res;
   }
 };
