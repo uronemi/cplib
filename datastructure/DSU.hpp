@@ -1,26 +1,24 @@
 #pragma once
+#include "../utility/Algebra.hpp"
 
 // Disjoint Set Union（DSU）
 //
 // 集合族を管理するデータ構造。可換モノイドを載せる実装
-template <
-  typename S = bool,
-  auto op = [](bool a, bool b) { return 0; },
-  auto e = [] { return 0; }
->
+template <IsMonoid M = internal::VoidMonoid>
 class DisjointSetUnion {
   private:
+  using value_type = M::value_type;
   unsigned int N;
-  std::vector<std::pair<int, S>> tree;
+  std::vector<std::pair<int, value_type>> tree;
 
   public:
   DisjointSetUnion() {}
 
-  explicit DisjointSetUnion(unsigned int N_) : DisjointSetUnion(std::vector<S>(N_, e())) {}
+  explicit DisjointSetUnion(unsigned int N_) : DisjointSetUnion(std::vector<value_type>(N_, M::e())) {}
 
   // 初期値 v で DSU を構築
   // O(|v|) time
-  explicit DisjointSetUnion(const std::vector<S>& v) : N(v.size()), tree(N) {
+  explicit DisjointSetUnion(const std::vector<value_type>& v) : N(v.size()), tree(N) {
     for (unsigned int i = 0; i < N; ++i) tree[i] = {-1, v[i]};
   }
 
@@ -41,7 +39,7 @@ class DisjointSetUnion {
   // x が属する集合の値の総積を返す
   // - x < N
   // O(α(N)) time
-  S fold(unsigned int x) { return tree[leader(x)].second; }
+  value_type fold(unsigned int x) { return tree[leader(x)].second; }
 
   // x と y が属する集合を併合
   // - x < N && y < N
@@ -53,7 +51,7 @@ class DisjointSetUnion {
 
     tree[x].first += tree[y].first;
     tree[y].first = x;
-    tree[x].second = op(tree[x].second, tree[y].second);
+    tree[x].second = M::op(tree[x].second, tree[y].second);
     return true;
   }
 

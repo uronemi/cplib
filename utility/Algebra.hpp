@@ -82,6 +82,19 @@ struct ActedMonoid {
 
 template <
   typename S,
+  auto Op,
+  auto E
+>
+concept CommutativeMonoidRequirements = MonoidRequirements<S, Op, E>;
+
+template <typename M>
+concept IsCommutativeMonoid = IsMonoid<M>;
+
+template <typename S, auto Op, auto E>
+using CommutativeMonoid = Monoid<S, Op, E>;
+
+template <
+  typename S,
   auto Rev
 >
 concept ReversibleRequirements = requires(S x) {
@@ -199,4 +212,21 @@ struct LiChao {
   using value_type = S;
   static S eval(const F& f, const S& x) { return Eval(f, x); }
   static F e() { return E(); }
+};
+
+namespace internal {
+
+using VoidMonoid = Monoid<
+  std::monostate,
+  [](std::monostate, std::monostate) { return std::monostate{}; },
+  []() { return std::monostate{}; }
+>;
+
+template <typename S>
+using RSQ = Monoid<
+  S,
+  [](S a, S b) -> S { return a + b; },
+  []() -> S { return S{0}; }
+>;
+
 };
