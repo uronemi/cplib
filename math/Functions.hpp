@@ -46,7 +46,7 @@ constexpr bool miller_rabin(unsigned long long N, std::initializer_list<unsigned
 //
 // x が負の数の場合も安全に剰余を取れる
 // O(1) time
-constexpr long long safe_mod(long long x, unsigned long long m) {
+constexpr long long safe_mod(long long x, long long m) {
   x %= m;
   if (x < 0) x += m;
   return x;
@@ -58,7 +58,7 @@ constexpr long long safe_mod(long long x, unsigned long long m) {
 // O(logN) time
 constexpr unsigned long long pow_mod_constexpr(long long x,
                                                unsigned long long N,
-                                               unsigned long long m) {
+                                               long long m) {
   if (m == 1) return 0;
   if (!N) return 1;
   unsigned long long y = safe_mod(x, m), res = 1;
